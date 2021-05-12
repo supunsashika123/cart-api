@@ -6,6 +6,7 @@ const foodService = require('./food.service');
 const router = express.Router();
 
 router.post('/', validate('create'), create);
+router.get('/', getAll);
 
 module.exports = router;
 
@@ -21,7 +22,7 @@ function validate(method) {
                 body('category', 'Category is empty.').notEmpty(),
                 body('price', 'Price doesn\'t exist.').exists(),
                 body('price', 'Price is empty.').notEmpty(),
-                body('price').isNumeric(),
+                body('price', 'Price needs to be a number.').isNumeric(),
             ]
         }
     }
@@ -39,6 +40,16 @@ async function create(req, res) {
         let createdFood = await foodService.create(req.body);
 
         return res.status(200).json(success("OK", createdFood, res.statusCode))
+    } catch (e) {
+        return res.status(500).json(error(e.message));
+    }
+}
+
+async function getAll(req, res) {
+    try {
+        let foods = await foodService.getAll();
+
+        return res.status(200).json(success("OK", foods, res.statusCode))
     } catch (e) {
         return res.status(500).json(error(e.message));
     }

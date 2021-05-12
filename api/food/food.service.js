@@ -3,15 +3,24 @@ const Food = db.Food;
 
 module.exports = {
     create,
+    getAll,
     update,
     getById,
 }
 
-async function create(user) {
+async function create(foodItem) {
     try {
-        const newFood = Food(user);
-        
+        const newFood = Food(foodItem);
+
         return await newFood.save();
+    } catch (err) {
+        throw new Error(err)
+    }
+}
+
+async function getAll() {
+    try {
+        return await Food.find({})
     } catch (err) {
         throw new Error(err)
     }
