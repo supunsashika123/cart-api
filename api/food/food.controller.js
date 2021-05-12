@@ -1,21 +1,45 @@
 const express = require('express');
-const foodService = require('./food.service');
+const { body, validationResult } = require('express-validator');
+const { success, error, validation } = require("../helpers/responses");
 
+const foodService = require('./food.service');
 const router = express.Router();
 
-router.post('/', create);
+router.post('/', validate('create'), create);
 
 module.exports = router;
 
+function validate(method) {
+    switch (method) {
+        case 'create': {
+            return [
+                body('name', 'Food name doesn\'t exist.').exists(),
+                body('name', 'Food name is empty.').notEmpty(),
+                body('description', 'Description doesn\'t exist.').exists(),
+                body('description', 'Description is empty.').notEmpty(),
+                body('category', 'Category doesn\'t exist.').exists(),
+                body('category', 'Category is empty.').notEmpty(),
+                body('price', 'Price doesn\'t exist.').exists(),
+                body('price', 'Price is empty.').notEmpty(),
+                body('price').isNumeric(),
+            ]
+        }
+    }
+}
+
 async function create(req, res) {
     try {
-        let newFood = req.body;
+        const errors = validationResult(req);
 
-        let createdFood = await foodService.create(newFood);
+        if (!errors.isEmpty()) {
+            res.status(422).json(validation(errors.array()));
+            return;
+        }
 
-        return res.json({ success: "Food has been created.", createdFood })
+        let createdFood = await foodService.create(req.body);
+
+        return res.status(200).json(success("OK", createdFood, res.statusCode))
     } catch (e) {
-        console.log(e)
-        return res.status(400).json({ error: e });
+        return res.status(500).json(error(e.message));
     }
 }

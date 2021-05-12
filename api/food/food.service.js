@@ -8,15 +8,13 @@ module.exports = {
 }
 
 async function create(user) {
-    const newFood = Food(user);
-    let response = {};
     try {
-        response = await newFood.save();
+        const newFood = Food(user);
+        
+        return await newFood.save();
     } catch (err) {
-        console.log(err)
-        response.error = "There was an issue while creating the food item.";
+        throw new Error(err)
     }
-    return response;
 }
 
 async function update(food, id) {
