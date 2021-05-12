@@ -23,6 +23,10 @@
   "dependencies": {
     "dotenv": "^9.0.2",
     "express": "^4.17.1",
-    "mongoose": "^5.12.7"
+    "express-validator": "^6.11.1",
+    "google-auth-library": "^7.0.4",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.12.7",
+    "nodemailer": "^6.6.0"
   }
 }
