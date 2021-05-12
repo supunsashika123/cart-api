@@ -4,12 +4,20 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 
-var GuserSchema = new Schema({
+var FoodSchema = new Schema({
   name: {
     type: String,
     required: true
   },
-  email: {
+  description: {
+    type: String,
+    required: true
+  },
+  category: {
+    type: String,
+    required: true
+  },
+  price: {
     type: String,
     required: true
   },
@@ -19,5 +27,4 @@ var GuserSchema = new Schema({
   }
 });
 
-
-module.exports = mongoose.model('Gusers', GuserSchema);
+module.exports = mongoose.model('Food', FoodSchema);
