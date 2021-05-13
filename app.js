@@ -11,7 +11,7 @@ app.use((req, res, next) => {
 
 app.get('/', async (req, res) => {
     res.send({
-        'message': "Welcome to the Food Court api."
+        'message': "Welcome to the Food Court API."
     });
 })
 
