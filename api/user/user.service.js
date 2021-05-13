@@ -4,7 +4,6 @@ const User = db.User;
 
 module.exports = {
     create,
-    Gcreate,
     // update,
 }
 
@@ -20,17 +19,6 @@ async function create(user) {
     return response;
 }
 
-async function Gcreate(user) {
-    const new_user = Guser(user)
-    let response = {};
-    try {
-        response = await new_user.save();
-    } catch (err) {
-        console.log(err)
-        response.error = "There was an issue while creating the user.";
-    }
-    return response;
-}
 
 // async function update(user, id) {
 //     const found_user = await User.findOne({ _id: id });

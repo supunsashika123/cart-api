@@ -65,9 +65,13 @@ async function googleLogin(req, res) {
 
 
         const { email_verified, name, email } = response.payload;
+        console.log('====================================');
+        console.log(name);
+        console.log(email);
+        console.log('====================================');
         if (email_verified) {
 
-            Guser.findOne({ email }).exec((err, user) => {
+            User.findOne({ email }).exec((err, user) => {
 
                 if (err) {
                     return res.status(200).json({
@@ -76,7 +80,8 @@ async function googleLogin(req, res) {
                 }
                 else {
                     if (user) {
-
+                        console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&');
+                        console.log(user);
                         const token = jwt.sign({ name: user.name, email: user.email }, process.env.GSIGN_AUTH_KEY, { expiresIn: "1h" });
                         return res.status(200).json({
                             message: "Auth Successful",
@@ -86,10 +91,12 @@ async function googleLogin(req, res) {
                     }
                     else {
                         try {
-                            let newUser = new Guser({ name, email })
-                            let createdUser = userService.Gcreate(newUser);
+                            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+                            console.log(user);
+                            let newUser = new User({ name, email })
+                            let createdUser = userService.create(newUser);
 
-                            const token = jwt.sign({ name: name, email: email }, process.env.GSIGN_AUTH_KEY, { expiresIn: "1h" });
+                            const token = jwt.sign({ name: user.name, email: user.email }, process.env.GSIGN_AUTH_KEY, { expiresIn: "1h" });
                             return res.status(200).json({
                                 message: "Auth Successful",
                                 token: token,
@@ -167,12 +174,14 @@ async function forgetPw(req, res) {
                 console.log(user);
                 const token = crypto.randomBytes(25).toString('hex')
 
-                Token({
-                    email: req.body.email,
-                    token: token,
-                    createdAt: Date.now()
-                }).save();
-               
+                // user({
+                // email: req.body.email, 
+                // token: token,
+                // }).save()
+                
+                user.token = token;
+                user.save();
+
 
                 const tran = nodemailer.createTransport({
 
@@ -187,7 +196,7 @@ async function forgetPw(req, res) {
                     from: 'bthunder1001@gmail.com',
                     to: `${user.email}`,
                     subject: 'Link to Reset Password',
-                    text: `http://localhost:3000/auth/reset-pw/${token}`
+                    text: `http://localhost:3000/resetpass/${token}`
                 };
 
                 tran.sendMail(mailDet, (err, response) => {
@@ -216,10 +225,9 @@ async function forgetPw(req, res) {
 
 async function resetPw(req, res) {
 
-    console.log(req.body.token)
-    Token.findOne({
+    User.findOne({
    
-            token: req.body.token,
+            token: req.query.token,
             
     }).then(user =>{
         console.log(user)
