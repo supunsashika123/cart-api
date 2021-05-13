@@ -10,12 +10,11 @@ var UserSchema = new Schema({
   },
   email: {
     type: String,
+    required: true
   },
   password: {
     type: String,
-  },
-  mobno: {
-    type: String,
+    select: false
   },
   token: {
     type: String,

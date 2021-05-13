@@ -3,59 +3,74 @@ const userService = require('./user.service');
 const { OAuth2Client } = require('google-auth-library')
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
-const { Guser, User, Token } = require('../helpers/database');
+const { User } = require('../helpers/database');
 const crypto = require('crypto')
 const nodemailer = require('nodemailer')
 var jwt = require('jsonwebtoken');
+const { GOOGLE_AUTH_CLIENT_KEY, JWT_SECRET } = require('../../config');
+const { success, error, validation } = require("../helpers/responses");
+const bcrypt = require('bcrypt');
 
-router.post('/signup', signUp);
+router.post('/signup', validate('signUp'), signUp);
 router.post('/googlelogin', googleLogin)
 router.post('/login', logIn)
 router.post('/forget-pw', forgetPw)
 router.get('/reset', resetPw)
 
-const client = new OAuth2Client("37361668095-bhna113hnh345ot5rpj7ddhfcubsr6sa.apps.googleusercontent.com")
+function validate(method) {
+    switch (method) {
+        case 'signUp': {
+            return [
+                body('name', 'Name doesn\'t exist.').exists(),
+                body('name', 'Name is empty.').notEmpty(),
+                body('email', 'Email doesn\'t exist.').exists(),
+                body('email', 'Email is empty.').notEmpty(),
+                body('email', 'Email is invalid.').isEmail(),
+                body('password', 'Password doesn\'t exist.').exists(),
+                body('password', 'Password is empty.').notEmpty(),
+                body('confirmPassword', 'Confirm password doesn\'t exist.').exists(),
+                body('confirmPassword', 'Confirm password is empty.').notEmpty(),
+            ]
+        }
+    }
+}
+
+
+const client = new OAuth2Client(GOOGLE_AUTH_CLIENT_KEY)
 
 module.exports = router;
 
 async function signUp(req, res) {
-
-    // const error = validationResult(req);
-
-    // if (!error.isEmpty()) {
-    //     return res.status(400).send(error.array())
-    // }
-    // else {
     try {
-        // let user = await userService.getUnique({ email: req.body.email });
-        // if (user) return res.status(Codes.NOT_FOUND).json(failed("Email already exists."));
+        const errors = validationResult(req);
 
-        // let salt = bcrypt.genSaltSync(parseInt(process.env.SALT_ROUNDS));
-        // newUser.password = bcrypt.hashSync(newUser.password, salt);
+        if (!errors.isEmpty()) {
+            res.status(422).json(validation(errors.array()));
+            return;
+        }
 
-        let newUser = req.body;
-        User.find({ email: req.body.email })
-            .exec()
-            .then(ppl => {
+        if (req.body.password !== req.body.confirmPassword) {
+            res.status(422).json(validation([{ msg: "Passwords does not match!" }]));
+        }
 
-                if (ppl.length > 0) {
+        let salt = bcrypt.genSaltSync(10);
+        req.body.password = bcrypt.hashSync(req.body.password, salt);
 
-                    return res.status(200).json({
-                        message: "user existed"
-                    })
-                }
-                else {
+        let userExists = await userService.getByEmail(req.body.email)
 
-                    let createdUser = userService.create(newUser);
-                    return res.json({ message: "user has been created.", createdUser })
-                }
+        if (userExists.length) {
+            res.status(409).json(validation([{ msg: "User already exists!" }]))
 
-            });
+            return
+        }
+
+        let newUser = await userService.create(req.body)
+        let token = jwt.sign({ id: newUser._id }, JWT_SECRET);
+
+        return res.status(200).json(success("OK", { user: newUser, token }, res.statusCode))
     } catch (e) {
-        console.log(e);
-        return res.json({ error: e });
+        return res.status(500).json(error(e.message));
     }
-    // }
 }
 
 async function googleLogin(req, res) {
@@ -164,10 +179,10 @@ async function logIn(req, res) {
 
 async function forgetPw(req, res) {
 
-    
+
     console.log(req.body.email)
-    User.findOne({ 
-            email : req.body.email
+    User.findOne({
+        email: req.body.email
     })
         .then(user => {
             if (user) {
@@ -178,7 +193,7 @@ async function forgetPw(req, res) {
                 // email: req.body.email, 
                 // token: token,
                 // }).save()
-                
+
                 user.token = token;
                 user.save();
 
@@ -226,19 +241,17 @@ async function forgetPw(req, res) {
 async function resetPw(req, res) {
 
     User.findOne({
-   
-            token: req.query.token,
-            
-    }).then(user =>{
+
+        token: req.query.token,
+
+    }).then(user => {
         console.log(user)
-        if(user == null)
-        {
+        if (user == null) {
             res.json({
                 error: 'password reset link is invalid or has expired'
             })
         }
-        else
-        {
+        else {
             res.json({
                 email: user.email,
                 message: 'password reset link ok',

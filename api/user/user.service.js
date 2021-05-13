@@ -4,6 +4,7 @@ const User = db.User;
 
 module.exports = {
     create,
+    getByEmail,
     // update,
 }
 
@@ -19,6 +20,13 @@ async function create(user) {
     return response;
 }
 
+async function getByEmail(email) {
+    try {
+        return await User.find({ email: email })
+    } catch {
+        throw new Error(err)
+    }
+}
 
 // async function update(user, id) {
 //     const found_user = await User.findOne({ _id: id });
