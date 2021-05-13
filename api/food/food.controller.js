@@ -9,6 +9,7 @@ const router = express.Router();
 
 router.post('/', validate('create'), create);
 router.get('/', getAll);
+router.get('/:id', getById);
 router.delete('/:id', validate('delete'), deleteById);
 
 module.exports = router;
@@ -69,6 +70,16 @@ async function create(req, res) {
 async function getAll(req, res) {
     try {
         let foods = await foodService.getAll();
+
+        return res.status(200).json(success("OK", foods, res.statusCode))
+    } catch (e) {
+        return res.status(500).json(error(e.message));
+    }
+}
+
+async function getById(req, res) {
+    try {
+        let foods = await foodService.getById(req.params.id);
 
         return res.status(200).json(success("OK", foods, res.statusCode))
     } catch (e) {

@@ -41,6 +41,10 @@ async function update(food, id) {
     return response;
 }
 
-async function getById(id, project = {}) {
-    return Food.findOne({ _id: new Object(id) }, project);
+async function getById(id) {
+    try {
+        return await Food.findById(id);
+    } catch (err) {
+        throw new Error(err)
+    }
 }
