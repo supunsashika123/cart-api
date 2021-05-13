@@ -22,5 +22,6 @@ app.use(cors());
 
 app.use('/user', require('./api/user/user.controller'));
 app.use('/food', require('./api/food/food.controller'));
+app.use('/order', require('./api/order/order.controller'));
 
 module.exports = app;
