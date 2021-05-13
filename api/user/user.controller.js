@@ -3,11 +3,11 @@ const userService = require('./user.service');
 const { OAuth2Client } = require('google-auth-library')
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
-const nodemailer = require('nodemailer')
 var jwt = require('jsonwebtoken');
-const { GOOGLE_AUTH_CLIENT_KEY, JWT_SECRET } = require('../../config');
+const { GOOGLE_AUTH_CLIENT_KEY, JWT_SECRET, BASE_WEB_URL } = require('../../config');
 const { success, error, validation } = require("../helpers/responses");
 const bcrypt = require('bcrypt');
+const sendEmail = require('../helpers/emailer');
 
 router.post('/signup', validate('signUp'), signUp);
 router.post('/googlelogin', googleLogin)
@@ -156,28 +156,8 @@ async function forgetPw(req, res) {
     const token = Math.random().toString(36).substr(2)
     await userService.update({ resetToken: token }, users[0]._id)
 
-    const tran = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: 'bthunder1001@gmail.com',
-            pass: 'cartapp123',
-        },
-    });
-
-    const mailDet = {
-        from: 'bthunder1001@gmail.com',
-        to: `${users[0].email}`,
-        subject: 'Link to Reset Password',
-        text: `http://localhost:3000/reset-password/${token}`
-    };
-
-    tran.sendMail(mailDet, (err, response) => {
-        if (err) {
-            return res.status(500).json(error([{ msg: 'Email send error!' }]))
-        }
-
-        return res.status(200).json(success("OK"))
-    });
+    sendEmail(users[0].email, 'Link to Reset Password', `${BASE_WEB_URL}reset-password/${token}`)
+    res.status(200).json(success("OK"))
 }
 
 async function resetPassword(req, res) {
