@@ -3,8 +3,6 @@ const userService = require('./user.service');
 const { OAuth2Client } = require('google-auth-library')
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
-const { User } = require('../helpers/database');
-const crypto = require('crypto')
 const nodemailer = require('nodemailer')
 var jwt = require('jsonwebtoken');
 const { GOOGLE_AUTH_CLIENT_KEY, JWT_SECRET } = require('../../config');
@@ -14,11 +12,18 @@ const bcrypt = require('bcrypt');
 router.post('/signup', validate('signUp'), signUp);
 router.post('/googlelogin', googleLogin)
 router.post('/login', validate('login'), login)
-router.post('/forget-pw', forgetPw)
-router.get('/reset', resetPw)
+router.post('/forgot-pw', validate('forgetPw'), forgetPw)
+router.post('/reset-pw/:token', resetPassword)
 
 function validate(method) {
     switch (method) {
+        case 'forgetPw': {
+            return [
+                body('email', 'Email doesn\'t exist.').exists(),
+                body('email', 'Email is empty.').notEmpty(),
+                body('email', 'Email is invalid.').isEmail(),
+            ]
+        }
         case 'login': {
             return [
                 body('email', 'Email doesn\'t exist.').exists(),
@@ -136,83 +141,54 @@ async function login(req, res) {
 }
 
 async function forgetPw(req, res) {
-    console.log(req.body.email)
-    User.findOne({
-        email: req.body.email
-    })
-        .then(user => {
-            if (user) {
-                console.log(user);
-                const token = crypto.randomBytes(25).toString('hex')
+    const errors = validationResult(req);
 
-                // user({
-                // email: req.body.email, 
-                // token: token,
-                // }).save()
+    if (!errors.isEmpty()) {
+        res.status(422).json(validation(errors.array()));
+        return;
+    }
 
-                user.token = token;
-                user.save();
+    let users = await userService.getByEmail(req.body.email)
+    if (!users.length) {
+        return res.status(404).json(validation([{ msg: "Invalid credentials!" }]))
+    }
 
+    const token = Math.random().toString(36).substr(2)
+    await userService.update({ resetToken: token }, users[0]._id)
 
-                const tran = nodemailer.createTransport({
-
-                    service: 'gmail',
-                    auth: {
-                        user: `${process.env.EMAIL_ADD}`,
-                        pass: `${process.env.EMAIL_PASS}`,
-                    },
-                });
-
-                const mailDet = {
-                    from: 'bthunder1001@gmail.com',
-                    to: `${user.email}`,
-                    subject: 'Link to Reset Password',
-                    text: `http://localhost:3000/resetpass/${token}`
-                };
-
-                tran.sendMail(mailDet, (err, response) => {
-
-                    if (err) {
-                        res.json({
-                            error: err
-                        });
-                    }
-                    else {
-                        res.json({
-                            message: 'recover email has been sent'
-                        });
-                    }
-
-                });
-
-            }
-            else {
-                res.json({
-                    message: 'email not registered'
-                });
-            }
-        });
-}
-
-async function resetPw(req, res) {
-
-    User.findOne({
-
-        token: req.query.token,
-
-    }).then(user => {
-        console.log(user)
-        if (user == null) {
-            res.json({
-                error: 'password reset link is invalid or has expired'
-            })
-        }
-        else {
-            res.json({
-                email: user.email,
-                message: 'password reset link ok',
-            });
-        }
+    const tran = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'bthunder1001@gmail.com',
+            pass: 'cartapp123',
+        },
     });
 
+    const mailDet = {
+        from: 'bthunder1001@gmail.com',
+        to: `${users[0].email}`,
+        subject: 'Link to Reset Password',
+        text: `http://localhost:3000/reset-password/${token}`
+    };
+
+    tran.sendMail(mailDet, (err, response) => {
+        if (err) {
+            return res.status(500).json(error([{ msg: 'Email send error!' }]))
+        }
+
+        return res.status(200).json(success("OK"))
+    });
+}
+
+async function resetPassword(req, res) {
+    let users = await userService.findByToken(req.params.token)
+    if (!users.length) {
+        return res.status(404).json(validation([{ msg: "Invalid token!" }]))
+    }
+
+    let salt = bcrypt.genSaltSync(10);
+    let newPassword = bcrypt.hashSync(req.body.password, salt);
+
+    let updatedUser = await userService.update({ password: newPassword, resetToken: null }, users[0]._id)
+    return res.status(200).json(success("OK", updatedUser, res.statusCode))
 }

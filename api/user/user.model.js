@@ -15,7 +15,7 @@ var UserSchema = new Schema({
   password: {
     type: String,
   },
-  token: {
+  resetToken: {
     type: String,
   },
   created: {

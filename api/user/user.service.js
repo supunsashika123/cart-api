@@ -5,7 +5,8 @@ const User = db.User;
 module.exports = {
     create,
     getByEmail,
-    // update,
+    findByToken,
+    update,
 }
 
 async function create(user) {
@@ -28,18 +29,22 @@ async function getByEmail(email) {
     }
 }
 
-// async function update(user, id) {
-//     const found_user = await User.findOne({ _id: id });
+async function findByToken(token) {
+    try {
+        return await User.find({ resetToken: token })
+    } catch {
+        throw new Error(err)
+    }
+}
 
-//     Object.assign(found_user, user);
+async function update(user, id) {
+    try {
+        const found_user = await User.findOne({ _id: id });
+        Object.assign(found_user, user);
 
-//     let response = {};
-//     try {
-//         response = await found_user.save();
-//     } catch (err) {
-//         console.log(err)
-//         response.error = "There was an issue while updating the user.";
-//     }
-//     return response;
-// }
+        return found_user.save();
+    } catch (err) {
+        throw new Error(err)
+    }
+}
 
