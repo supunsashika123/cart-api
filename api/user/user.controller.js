@@ -56,9 +56,9 @@ async function signUp(req, res) {
         let salt = bcrypt.genSaltSync(10);
         req.body.password = bcrypt.hashSync(req.body.password, salt);
 
-        let userExists = await userService.getByEmail(req.body.email)
+        let existingUsers = await userService.getByEmail(req.body.email)
 
-        if (userExists.length) {
+        if (existingUsers.length) {
             res.status(409).json(validation([{ msg: "User already exists!" }]))
 
             return
@@ -74,64 +74,34 @@ async function signUp(req, res) {
 }
 
 async function googleLogin(req, res) {
+    try {
+        let googleResponse = await client.verifyIdToken(
+            {
+                idToken: req.body.tokenID,
+                audience: "37361668095-bhna113hnh345ot5rpj7ddhfcubsr6sa.apps.googleusercontent.com"
+            }
+        )
 
+        const { email_verified, name, email } = googleResponse.payload;
 
-    client.verifyIdToken({ idToken: req.body.tokenID, audience: "37361668095-bhna113hnh345ot5rpj7ddhfcubsr6sa.apps.googleusercontent.com" }).then(response => {
-
-
-        const { email_verified, name, email } = response.payload;
-        console.log('====================================');
-        console.log(name);
-        console.log(email);
-        console.log('====================================');
-        if (email_verified) {
-
-            User.findOne({ email }).exec((err, user) => {
-
-                if (err) {
-                    return res.status(200).json({
-                        error: "Google Account Verification went wrong"
-                    })
-                }
-                else {
-                    if (user) {
-                        console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&');
-                        console.log(user);
-                        const token = jwt.sign({ name: user.name, email: user.email }, process.env.GSIGN_AUTH_KEY, { expiresIn: "1h" });
-                        return res.status(200).json({
-                            message: "Auth Successful",
-                            token: token,
-                            isLogged: true
-                        });
-                    }
-                    else {
-                        try {
-                            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-                            console.log(user);
-                            let newUser = new User({ name, email })
-                            let createdUser = userService.create(newUser);
-
-                            const token = jwt.sign({ name: user.name, email: user.email }, process.env.GSIGN_AUTH_KEY, { expiresIn: "1h" });
-                            return res.status(200).json({
-                                message: "Auth Successful",
-                                token: token,
-                                isLogged: true
-                            });
-
-                            return res.json({ success: "user has been created.", createdUser })
-                        } catch (e) {
-                            console.log(e);
-                            return res.status(200).json({ message: e });
-                        }
-
-
-
-                    }
-                }
-            })
+        if (!email_verified) {
+            return res.status(409).json(validation([{ msg: "Invalid email!" }]))
         }
 
-    })
+        let existingUsers = await userService.getByEmail(email)
+        if (existingUsers.length) {
+            let token = jwt.sign({ id: existingUsers[0]._id }, JWT_SECRET);
+
+            return res.status(200).json(success("OK", { user: existingUsers[0], token }, res.statusCode))
+        }
+
+        let createdUser = userService.create({ name, email });
+        let token = jwt.sign({ id: createdUser._id }, JWT_SECRET);
+
+        res.status(200).json(success("OK", { user: createdUser, token }, res.statusCode))
+    } catch (e) {
+        return res.status(500).json(error(e.message));
+    }
 
 }
 
