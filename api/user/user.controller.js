@@ -13,12 +13,20 @@ const bcrypt = require('bcrypt');
 
 router.post('/signup', validate('signUp'), signUp);
 router.post('/googlelogin', googleLogin)
-router.post('/login', logIn)
+router.post('/login', validate('login'), login)
 router.post('/forget-pw', forgetPw)
 router.get('/reset', resetPw)
 
 function validate(method) {
     switch (method) {
+        case 'login': {
+            return [
+                body('email', 'Email doesn\'t exist.').exists(),
+                body('password', 'Password doesn\'t exist.').exists(),
+                body('email', 'Email is empty.').notEmpty(),
+                body('password', 'Password is empty.').notEmpty(),
+            ]
+        }
         case 'signUp': {
             return [
                 body('name', 'Name doesn\'t exist.').exists(),
@@ -105,51 +113,29 @@ async function googleLogin(req, res) {
 
 }
 
-async function logIn(req, res) {
+async function login(req, res) {
+    const errors = validationResult(req);
 
+    if (!errors.isEmpty()) {
+        res.status(422).json(validation(errors.array()));
+        return;
+    }
 
-    User.find({ email: req.body.email })
-        .exec()
-        .then(ppl => {
+    let users = await userService.getByEmail(req.body.email)
+    if (!users.length || !users[0].password) {
+        return res.status(404).json(validation([{ msg: "Invalid credentials!" }]))
+    }
 
-            if (ppl.length < 1) {
+    if (!bcrypt.compareSync(req.body.password, users[0].password)) {
+        return res.status(400).json(validation([{ msg: "Invalid credentials!" }]))
+    }
 
-                return res.status(200).json({
-                    message: "user not existed"
-                })
-            } else {
-                if (req.body.password === ppl[0].password) {
-                    const token = jwt.sign({ name: ppl[0].name, email: ppl[0].email }, process.env.GSIGN_AUTH_KEY, { expiresIn: "1h" });
-                    return res.status(200).json({
-                        message: "Auth Successful",
-                        token: token,
-                        isLogged: true
-                    });
-                }
-                else {
-                    return res.status(200).json({
-                        error: "Account Verification went wrong"
-                    })
-                }
+    let token = jwt.sign({ id: users[0]._id }, JWT_SECRET);
 
-
-            }
-
-        })
-        .catch(err => {
-            if (err) {
-                console.log(err);
-                res.status(500).json({
-                    error: err
-                })
-            }
-        })
-
+    return res.status(200).json(success("OK", { user: users[0], token }, res.statusCode))
 }
 
 async function forgetPw(req, res) {
-
-
     console.log(req.body.email)
     User.findOne({
         email: req.body.email
