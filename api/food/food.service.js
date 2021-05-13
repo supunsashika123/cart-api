@@ -6,7 +6,8 @@ module.exports = {
     getAll,
     update,
     getById,
-    searchByName
+    searchByName,
+    deleteById
 }
 
 async function create(foodItem) {
@@ -51,6 +52,14 @@ async function searchByName(query) {
         return await Food.find({
             name: { "$regex": query, "$options": "i" }
         });
+    } catch (err) {
+        throw new Error(err)
+    }
+}
+
+async function deleteById(id) {
+    try {
+        await Food.deleteOne({ _id: id })
     } catch (err) {
         throw new Error(err)
     }

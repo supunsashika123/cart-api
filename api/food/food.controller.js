@@ -1,6 +1,5 @@
 const express = require('express');
 const { body, query, validationResult } = require('express-validator');
-const { Food } = require('../helpers/database');
 const upload = require('../helpers/imageUpload');
 const { success, error, validation } = require("../helpers/responses");
 
@@ -42,7 +41,7 @@ function validate(method) {
 
 async function deleteById(req, res) {
     try {
-        await Food.deleteOne({ _id: req.params.id })
+        await foodService.deleteById(req.params.id)
 
         return res.status(200).json(success("OK", "Food item deleted.", res.statusCode))
     } catch (e) {

@@ -2,11 +2,10 @@ const express = require('express');
 const { body, query, validationResult } = require('express-validator');
 const { success, error, validation } = require("../helpers/responses");
 
-const orderService = require('./order.service');
+const cartService = require('./cart.service');
 const router = express.Router();
 
 router.post('/', validate('create'), create);
-router.get('/', getAll);
 router.get('/:id', getById);
 router.put('/:id', validate('create'), update);
 
@@ -42,7 +41,7 @@ async function create(req, res) {
 
         // let imageUploadResponse = await upload(req.body.image)
 
-        // let createdFood = await orderService.create({ ...req.body, image: imageUploadResponse.url });
+        // let createdFood = await cartService.create({ ...req.body, image: imageUploadResponse.url });
 
         // return res.status(200).json(success("OK", createdFood, res.statusCode))
     } catch (e) {
@@ -50,19 +49,9 @@ async function create(req, res) {
     }
 }
 
-async function getAll(req, res) {
-    try {
-        let orders = await orderService.getAll();
-
-        return res.status(200).json(success("OK", orders, res.statusCode))
-    } catch (e) {
-        return res.status(500).json(error(e.message));
-    }
-}
-
 async function getById(req, res) {
     try {
-        let orders = await orderService.getById(req.params.id);
+        let orders = await cartService.getById(req.params.id);
 
         return res.status(200).json(success("OK", orders, res.statusCode))
     } catch (e) {
@@ -79,7 +68,7 @@ async function update(req, res) {
             return;
         }
 
-        let updatedOrder = await orderService.update(req.body, req.params.id)
+        let updatedOrder = await cartService.update(req.body, req.params.id)
 
         return res.status(200).json(success("OK", updatedOrder, res.statusCode))
     } catch (e) {
