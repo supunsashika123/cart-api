@@ -6,6 +6,7 @@ module.exports = {
     getAll,
     update,
     getById,
+    searchByName
 }
 
 async function create(foodItem) {
@@ -40,6 +41,16 @@ async function update(food, id) {
 async function getById(id) {
     try {
         return await Food.findById(id);
+    } catch (err) {
+        throw new Error(err)
+    }
+}
+
+async function searchByName(query) {
+    try {
+        return await Food.find({
+            name: { "$regex": query, "$options": "i" }
+        });
     } catch (err) {
         throw new Error(err)
     }

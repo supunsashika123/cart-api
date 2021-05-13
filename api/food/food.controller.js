@@ -9,6 +9,7 @@ const router = express.Router();
 
 router.post('/', validate('create'), create);
 router.get('/', getAll);
+router.get('/search', search);
 router.get('/:id', getById);
 router.delete('/:id', validate('delete'), deleteById);
 router.put('/:id', validate('create'), update);
@@ -100,6 +101,16 @@ async function update(req, res) {
         let updatedFoods = await foodService.update(req.body, req.params.id)
 
         return res.status(200).json(success("OK", updatedFoods, res.statusCode))
+    } catch (e) {
+        return res.status(500).json(error(e.message));
+    }
+}
+
+async function search(req, res) {
+    try {
+        let foods = await foodService.searchByName(req.query.name)
+
+        return res.status(200).json(success("OK", foods, res.statusCode))
     } catch (e) {
         return res.status(500).json(error(e.message));
     }
