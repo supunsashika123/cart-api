@@ -7,7 +7,16 @@ var Schema = mongoose.Schema;
 var UserSchema = new Schema({
   name: {
     type: String,
+  },
+  email: {
+    type: String,
     required: true
+  },
+  password: {
+    type: String,
+  },
+  resetToken: {
+    type: String,
   },
   created: {
     type: Date,
@@ -15,4 +24,5 @@ var UserSchema = new Schema({
   }
 });
 
-module.exports = mongoose.model('User', UserSchema);
+
+module.exports = mongoose.model('Users', UserSchema);
