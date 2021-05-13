@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, query, validationResult } = require('express-validator');
 const { Food } = require('../helpers/database');
+const upload = require('../helpers/imageUpload');
 const { success, error, validation } = require("../helpers/responses");
 
 const foodService = require('./food.service');
@@ -30,6 +31,7 @@ function validate(method) {
                 body('price', 'Price doesn\'t exist.').exists(),
                 body('price', 'Price is empty.').notEmpty(),
                 body('price', 'Price needs to be a number.').isNumeric(),
+                body('image', 'Image doesn\'t exist.').exists(),
             ]
         }
     }
@@ -54,7 +56,9 @@ async function create(req, res) {
             return;
         }
 
-        let createdFood = await foodService.create(req.body);
+        let imageUploadResponse = await upload(req.body.image)
+
+        let createdFood = await foodService.create({ ...req.body, image: imageUploadResponse.url });
 
         return res.status(200).json(success("OK", createdFood, res.statusCode))
     } catch (e) {
