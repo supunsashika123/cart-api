@@ -27,18 +27,14 @@ async function getAll() {
 }
 
 async function update(food, id) {
-    const foundFood = await Food.findOne({ _id: id });
-
-    Object.assign(foundFood, food);
-
-    let response = {};
     try {
-        response = await foundFood.save();
+        const foundfood = await Food.findOne({ _id: id });
+        Object.assign(foundfood, food);
+
+        return foundfood.save();
     } catch (err) {
-        console.log(err)
-        response.error = "There was an issue while updating the food item.";
+        throw new Error(err)
     }
-    return response;
 }
 
 async function getById(id) {

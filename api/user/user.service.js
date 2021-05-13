@@ -39,10 +39,10 @@ async function findByToken(token) {
 
 async function update(user, id) {
     try {
-        const found_user = await User.findOne({ _id: id });
-        Object.assign(found_user, user);
+        const foundUser = await User.findOne({ _id: id });
+        Object.assign(founduser, user);
 
-        return found_user.save();
+        return founduser.save();
     } catch (err) {
         throw new Error(err)
     }
