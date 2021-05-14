@@ -14,7 +14,7 @@ router.get('/me', getInfo)
 router.post('/signup', validate('signUp'), signUp);
 router.post('/googlelogin', googleLogin)
 router.post('/login', validate('login'), login)
-router.post('/login', validate('login'), adminLogin)
+router.post('/admin/login', validate('login'), adminLogin)
 router.post('/forgot-pw', validate('forgetPw'), forgetPw)
 router.post('/reset-pw/:token', resetPassword)
 
@@ -186,17 +186,16 @@ async function adminLogin(req, res) {
     }
 
     let users = await userService.getByEmail(req.body.email)
-    if (!users.length || !users[0].password) {
+    
+    if (!users.length || users[0].password !== req.body.password) {
         return res.status(404).json(validation([{ msg: "Invalid credentials!" }]))
     }
-
-    if (!bcrypt.compareSync(req.body.password, users[0].password)) {
-        return res.status(400).json(validation([{ msg: "Invalid credentials!" }]))
-    }
-
-    let token = jwt.sign({ id: users[0]._id }, JWT_SECRET);
-
-    return res.status(200).json(success("OK", { user: users[0], token }, res.statusCode))
+    
+    
+    let token = createToken({ id: users[0]._id });
+    users[0].password = undefined
+    return res.status(200).json(success("OK", { user: users[0], token}, res.statusCode))
+    
 }
 async function getInfo(req, res) {
     try {
