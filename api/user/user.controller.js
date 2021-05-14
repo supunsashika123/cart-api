@@ -8,7 +8,9 @@ const { GOOGLE_AUTH_CLIENT_KEY, JWT_SECRET, BASE_WEB_URL } = require('../../conf
 const { success, error, validation } = require("../helpers/responses");
 const bcrypt = require('bcrypt');
 const sendEmail = require('../helpers/emailer');
+const { createToken } = require('../helpers/authMiddleware');
 
+router.get('/me', getInfo)
 router.post('/signup', validate('signUp'), signUp);
 router.post('/googlelogin', googleLogin)
 router.post('/login', validate('login'), login)
@@ -79,7 +81,7 @@ async function signUp(req, res) {
         }
 
         let newUser = await userService.create(req.body)
-        let token = jwt.sign({ id: newUser._id }, JWT_SECRET);
+        let token = createToken({ id: newUser._id });
 
         return res.status(200).json(success("OK", { user: newUser, token }, res.statusCode))
     } catch (e) {
@@ -104,13 +106,13 @@ async function googleLogin(req, res) {
 
         let existingUsers = await userService.getByEmail(email)
         if (existingUsers.length) {
-            let token = jwt.sign({ id: existingUsers[0]._id }, JWT_SECRET);
+            let token = createToken({ id: existingUsers[0]._id });
 
             return res.status(200).json(success("OK", { user: existingUsers[0], token }, res.statusCode))
         }
 
         let createdUser = userService.create({ name, email });
-        let token = jwt.sign({ id: createdUser._id }, JWT_SECRET);
+        let token = createToken({ id: createdUser._id });
 
         res.status(200).json(success("OK", { user: createdUser, token }, res.statusCode))
     } catch (e) {
@@ -136,7 +138,8 @@ async function login(req, res) {
         return res.status(400).json(validation([{ msg: "Invalid credentials!" }]))
     }
 
-    let token = jwt.sign({ id: users[0]._id }, JWT_SECRET);
+    let token = createToken({ id: users[0]._id });
+    users[0].password = undefined
 
     return res.status(200).json(success("OK", { user: users[0], token }, res.statusCode))
 }
@@ -195,3 +198,14 @@ async function adminLogin(req, res) {
 
     return res.status(200).json(success("OK", { user: users[0], token }, res.statusCode))
 }
+async function getInfo(req, res) {
+    try {
+        let user = await userService.getById(req.user.id);
+        user.password = undefined
+
+        return res.status(200).json(success("OK", user, res.statusCode))
+    } catch (e) {
+        return res.status(500).json(error(e.message));
+    }
+}
+

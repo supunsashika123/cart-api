@@ -4,5 +4,7 @@ mongoose.Promise = global.Promise;
 
 module.exports = {
     User: require('../user/user.model'),
-    Food: require('../food/food.model')
+    Food: require('../food/food.model'),
+    Order: require('../order/order.model'),
+    Cart: require('../cart/cart.model'),
 };
