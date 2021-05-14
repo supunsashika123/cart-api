@@ -7,6 +7,11 @@ const openUrls = [
     '/user/signup',
     '/user/googlelogin',
     '/user/forgot-pw',
+    '/user/admin/login',
+    '/user/admin/new-product',
+    '/user/admin/products',
+    '/user/admin/orders',
+    
 ]
 
 function authenticateToken(req, res, next) {

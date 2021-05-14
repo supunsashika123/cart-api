@@ -18,6 +18,11 @@ var UserSchema = new Schema({
   resetToken: {
     type: String,
   },
+  type: {
+    type: String,
+    required: true,
+    default: 'USER'
+  },
   created: {
     type: Date,
     default: Date.now

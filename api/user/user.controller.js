@@ -14,6 +14,7 @@ router.get('/me', getInfo)
 router.post('/signup', validate('signUp'), signUp);
 router.post('/googlelogin', googleLogin)
 router.post('/login', validate('login'), login)
+router.post('/admin/login', validate('login'), adminLogin)
 router.post('/forgot-pw', validate('forgetPw'), forgetPw)
 router.post('/reset-pw/:token', resetPassword)
 
@@ -176,6 +177,26 @@ async function resetPassword(req, res) {
     return res.status(200).json(success("OK", updatedUser, res.statusCode))
 }
 
+async function adminLogin(req, res) {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        res.status(422).json(validation(errors.array()));
+        return;
+    }
+
+    let users = await userService.getByEmail(req.body.email)
+    
+    if (!users.length || users[0].password !== req.body.password) {
+        return res.status(404).json(validation([{ msg: "Invalid credentials!" }]))
+    }
+    
+    
+    let token = createToken({ id: users[0]._id });
+    users[0].password = undefined
+    return res.status(200).json(success("OK", { user: users[0], token}, res.statusCode))
+    
+}
 async function getInfo(req, res) {
     try {
         let user = await userService.getById(req.user.id);
