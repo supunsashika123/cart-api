@@ -7,6 +7,7 @@ module.exports = {
     getByEmail,
     findByToken,
     update,
+    getById
 }
 
 async function create(user) {
@@ -40,11 +41,18 @@ async function findByToken(token) {
 async function update(user, id) {
     try {
         const foundUser = await User.findOne({ _id: id });
-        Object.assign(founduser, user);
+        Object.assign(foundUser, user);
 
-        return founduser.save();
+        return foundUser.save();
     } catch (err) {
         throw new Error(err)
     }
 }
 
+async function getById(id) {
+    try {
+        return await User.findById(id);
+    } catch (err) {
+        throw new Error(err)
+    }
+}
