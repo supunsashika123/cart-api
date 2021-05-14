@@ -4,7 +4,8 @@ const { success, error, validation } = require("../helpers/responses");
 
 const orderService = require('./order.service');
 const cartService = require('../cart/cart.service');
-const foodService = require('../food/food.service');
+const userService = require('../user/user.service');
+
 const router = express.Router();
 
 router.post('/', validate('create'), create);
@@ -45,18 +46,18 @@ async function create(req, res) {
 
 async function getAll(req, res) {
     try {
-        let orders = await orderService.getAll();
+        let user = await userService.getById(req.user.id)
 
-        for (let j = 0; j < orders.length; j++) {
-            let order = orders[j]
-            //Bind food items
-            for (let i = 0; i < order.items.length; i++) {
-                let foodItem = await foodService.getById(order.items[i].itemId)
-                order.items[i].item = foodItem
-            }
+        let orders = []
+        if (user.type === "ADMIN") {
+            orders = await orderService.getAll();
+        } else {
+            orders = await orderService.getByUserId(req.user.id);
         }
 
-        return res.status(200).json(success("OK", orders, res.statusCode))
+        let withItemInfo = await orderService.getWithItemInfo(orders)
+
+        return res.status(200).json(success("OK", withItemInfo, res.statusCode))
     } catch (e) {
         return res.status(500).json(error(e.message));
     }
