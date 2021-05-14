@@ -17,7 +17,7 @@ function authenticateToken(req, res, next) {
         return next()
     }
 
-    if (req.url.includes('/user/reset-pw/')) {
+    if (req.url.includes('/user/reset-pw/') || req.url.includes('/doc/')) {
         return next()
     }
 
