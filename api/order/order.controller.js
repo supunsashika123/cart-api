@@ -4,6 +4,7 @@ const { success, error, validation } = require("../helpers/responses");
 
 const orderService = require('./order.service');
 const cartService = require('../cart/cart.service');
+const foodService = require('../food/food.service');
 const router = express.Router();
 
 router.post('/', validate('create'), create);
@@ -45,6 +46,15 @@ async function create(req, res) {
 async function getAll(req, res) {
     try {
         let orders = await orderService.getAll();
+
+        for (let j = 0; j < orders.length; j++) {
+            let order = orders[j]
+            //Bind food items
+            for (let i = 0; i < order.items.length; i++) {
+                let foodItem = await foodService.getById(order.items[i].itemId)
+                order.items[i].item = foodItem
+            }
+        }
 
         return res.status(200).json(success("OK", orders, res.statusCode))
     } catch (e) {
