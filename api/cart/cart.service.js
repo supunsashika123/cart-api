@@ -38,15 +38,9 @@ async function getAll() {
 async function update(cart, id) {
     try {
         const foundCart = await Cart.findOne({ _id: id });
-        // Object.assign(foundCart, cart);
-
         foundCart.overwrite(cart)
-        let updated = await foundCart.save();
-        
-        console.log(updated)
 
-        return updated
-
+        return await foundCart.save();
     } catch (err) {
         throw new Error(err)
     }

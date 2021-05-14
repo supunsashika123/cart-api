@@ -105,9 +105,9 @@ async function update(req, res) {
             return;
         }
 
-        let updatedOrder = await cartService.update(req.body, req.params.id)
+        let updatedCart = await cartService.update(req.body, req.params.id)
 
-        return res.status(200).json(success("OK", updatedOrder, res.statusCode))
+        return res.status(200).json(success("OK", updatedCart, res.statusCode))
     } catch (e) {
         return res.status(500).json(error(e.message));
     }
