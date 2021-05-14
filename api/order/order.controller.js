@@ -3,6 +3,7 @@ const { body, query, validationResult } = require('express-validator');
 const { success, error, validation } = require("../helpers/responses");
 
 const orderService = require('./order.service');
+const cartService = require('../cart/cart.service');
 const router = express.Router();
 
 router.post('/', validate('create'), create);
@@ -16,16 +17,8 @@ function validate(method) {
     switch (method) {
         case 'create': {
             return [
-                // body('name', 'Food name doesn\'t exist.').exists(),
-                // body('name', 'Food name is empty.').notEmpty(),
-                // body('description', 'Description doesn\'t exist.').exists(),
-                // body('description', 'Description is empty.').notEmpty(),
-                // body('category', 'Category doesn\'t exist.').exists(),
-                // body('category', 'Category is empty.').notEmpty(),
-                // body('price', 'Price doesn\'t exist.').exists(),
-                // body('price', 'Price is empty.').notEmpty(),
-                // body('price', 'Price needs to be a number.').isNumeric(),
-                // body('image', 'Image doesn\'t exist.').exists(),
+                body('total', 'Price doesn\'t exist.').exists(),
+                body('items', 'Items doesn\'t exist.').exists(),
             ]
         }
     }
@@ -33,18 +26,17 @@ function validate(method) {
 
 async function create(req, res) {
     try {
-        // const errors = validationResult(req);
+        const errors = validationResult(req);
 
-        // if (!errors.isEmpty()) {
-        //     res.status(422).json(validation(errors.array()));
-        //     return;
-        // }
+        if (!errors.isEmpty()) {
+            res.status(422).json(validation(errors.array()));
+            return;
+        }
 
-        // let imageUploadResponse = await upload(req.body.image)
+        let newOrder = await orderService.create({ ...req.body, customerId: req.user.id });
+        await cartService.deleteByCustomerId(req.user.id)
 
-        // let createdFood = await orderService.create({ ...req.body, image: imageUploadResponse.url });
-
-        // return res.status(200).json(success("OK", createdFood, res.statusCode))
+        return res.status(200).json(success("OK", newOrder, res.statusCode))
     } catch (e) {
         return res.status(500).json(error(e.message));
     }

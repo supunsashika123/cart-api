@@ -18,7 +18,6 @@ function validate(method) {
         case 'create': {
             return [
                 body('items', 'Items doesn\'t exist.').exists(),
-                body('items', 'Items are empty.').notEmpty(),
             ]
         }
     }
@@ -47,7 +46,7 @@ async function create(req, res) {
                 }
             })
 
-            existingCart.total = await calculateTotalPrice(existingCart)
+            existingCart.total = await cartService.calculateTotalPrice(existingCart)
             let updatedCart = await cartService.update(existingCart, existingCart._id)
 
             return res.status(200).json(success("OKdd", updatedCart, res.statusCode))
@@ -55,7 +54,7 @@ async function create(req, res) {
 
         let cart = req.body
 
-        cart.total = await calculateTotalPrice(cart)
+        cart.total = await cartService.calculateTotalPrice(cart)
         cart.customerId = req.user.id
         let newCart = await cartService.create(cart)
 
@@ -63,17 +62,6 @@ async function create(req, res) {
     } catch (e) {
         return res.status(500).json(error(e.message));
     }
-}
-
-async function calculateTotalPrice(cart) {
-    let total = 0
-
-    for (let i = 0; i < cart.items.length; i++) {
-        let foodItem = await foodService.getById(cart.items[i].itemId)
-        total += +foodItem.price * cart.items[i].qty
-    }
-
-    return total
 }
 
 async function getForUser(req, res) {
@@ -105,6 +93,13 @@ async function update(req, res) {
             return;
         }
 
+        if (!req.body.items.length) {
+            await cartService.deleteById(req.body._id)
+            
+            return res.status(200).json(success("OK", {}, res.statusCode))
+        }
+
+        req.body.total = await cartService.calculateTotalPrice(req.body)
         let updatedCart = await cartService.update(req.body, req.params.id)
 
         return res.status(200).json(success("OK", updatedCart, res.statusCode))
