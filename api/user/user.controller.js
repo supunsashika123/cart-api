@@ -12,6 +12,7 @@ const sendEmail = require('../helpers/emailer');
 router.post('/signup', validate('signUp'), signUp);
 router.post('/googlelogin', googleLogin)
 router.post('/login', validate('login'), login)
+router.post('/login', validate('login'), adminLogin)
 router.post('/forgot-pw', validate('forgetPw'), forgetPw)
 router.post('/reset-pw/:token', resetPassword)
 
@@ -171,4 +172,26 @@ async function resetPassword(req, res) {
 
     let updatedUser = await userService.update({ password: newPassword, resetToken: null }, users[0]._id)
     return res.status(200).json(success("OK", updatedUser, res.statusCode))
+}
+
+async function adminLogin(req, res) {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        res.status(422).json(validation(errors.array()));
+        return;
+    }
+
+    let users = await userService.getByEmail(req.body.email)
+    if (!users.length || !users[0].password) {
+        return res.status(404).json(validation([{ msg: "Invalid credentials!" }]))
+    }
+
+    if (!bcrypt.compareSync(req.body.password, users[0].password)) {
+        return res.status(400).json(validation([{ msg: "Invalid credentials!" }]))
+    }
+
+    let token = jwt.sign({ id: users[0]._id }, JWT_SECRET);
+
+    return res.status(200).json(success("OK", { user: users[0], token }, res.statusCode))
 }
