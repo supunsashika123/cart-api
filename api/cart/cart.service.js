@@ -5,7 +5,16 @@ module.exports = {
     create,
     getAll,
     update,
-    getById
+    getById,
+    getByCustomerId
+}
+
+async function getByCustomerId(customerId) {
+    try {
+        return await Cart.find({ customerId: customerId })
+    } catch (err) {
+        throw new Error(err)
+    }
 }
 
 async function create(cart) {
@@ -29,9 +38,15 @@ async function getAll() {
 async function update(cart, id) {
     try {
         const foundCart = await Cart.findOne({ _id: id });
-        Object.assign(foundCart, cart);
+        // Object.assign(foundCart, cart);
 
-        return foundCart.save();
+        foundCart.overwrite(cart)
+        let updated = await foundCart.save();
+        
+        console.log(updated)
+
+        return updated
+
     } catch (err) {
         throw new Error(err)
     }
