@@ -8,7 +8,7 @@ const foodService = require('../food/food.service');
 const router = express.Router();
 
 router.post('/', validate('create'), create);
-router.get('/:id', getById);
+router.get('/', getForUser);
 router.put('/:id', validate('create'), update);
 
 module.exports = router;
@@ -76,11 +76,21 @@ async function calculateTotalPrice(cart) {
     return total
 }
 
-async function getById(req, res) {
+async function getForUser(req, res) {
     try {
-        let orders = await cartService.getById(req.params.id);
+        let carts = await cartService.getByCustomerId(req.user.id);
+        if (!carts.length) {
+            return res.status(404).json(error("No cart found.", 404));
+        }
 
-        return res.status(200).json(success("OK", orders, res.statusCode))
+        let cart = carts[0]
+        //Bind food items
+        for (let i = 0; i < cart.items.length; i++) {
+            let foodItem = await foodService.getById(cart.items[i].itemId)
+            cart.items[i].item = foodItem
+        }
+
+        return res.status(200).json(success("OK", cart, res.statusCode))
     } catch (e) {
         return res.status(500).json(error(e.message));
     }
