@@ -1,17 +1,14 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../../config');
-const { success, error, validation } = require("../helpers/responses");
+const { error } = require("../helpers/responses");
+const userService = require('../user/user.service');
 
 const openUrls = [
     '/user/login',
     '/user/signup',
     '/user/googlelogin',
     '/user/forgot-pw',
-    '/user/admin/login',
-    '/user/admin/new-product',
-    '/user/admin/products',
-    '/user/admin/orders',
-    
+    '/user/admin/login'
 ]
 
 function authenticateToken(req, res, next) {
@@ -40,12 +37,15 @@ function authenticateToken(req, res, next) {
     })
 }
 
-// function adminOnly(req, res, next) {
-//     if (req.user.type && req.user.type === 'admin') {
-//         return next();
-//     }
-//     return res.status(403).send(failed("Only admins are authorized for this action!"));
-// }
+async function adminOnly(req, res, next) {
+    let user = await userService.getById(req.user.id)
+
+    if (user.type && user.type === 'ADMIN') {
+        return next();
+    }
+    
+    return res.status(403).send(error("Only admins are authorized for this action!", 403));
+}
 
 function createToken(info) {
     return jwt.sign(info, JWT_SECRET);
@@ -54,5 +54,5 @@ function createToken(info) {
 module.exports = {
     authenticateToken,
     createToken,
-    // adminOnly
+    adminOnly
 }

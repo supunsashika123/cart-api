@@ -2,16 +2,17 @@ const express = require('express');
 const { body, query, validationResult } = require('express-validator');
 const upload = require('../helpers/imageUpload');
 const { success, error, validation } = require("../helpers/responses");
+const { adminOnly } = require('../helpers/authMiddleware');
 
 const foodService = require('./food.service');
 const router = express.Router();
 
-router.post('/', validate('create'), create);
+router.post('/', adminOnly, validate('create'), create);
 router.get('/', getAll);
 router.get('/search', search);
 router.get('/:id', getById);
-router.delete('/:id', validate('delete'), deleteById);
-router.put('/:id', validate('create'), update);
+router.delete('/:id', adminOnly, validate('delete'), deleteById);
+router.put('/:id', adminOnly, validate('create'), update);
 
 module.exports = router;
 
