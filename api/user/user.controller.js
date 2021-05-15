@@ -82,6 +82,7 @@ async function signUp(req, res) {
 
         let newUser = await userService.create(req.body)
         let token = createToken({ id: newUser._id });
+        console.log(token);
 
         return res.status(200).json(success("OK", { user: newUser, token }, res.statusCode))
     } catch (e) {

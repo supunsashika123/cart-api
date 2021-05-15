@@ -25,7 +25,7 @@ async function create(user) {
 async function getByEmail(email) {
     try {
         return await User.find({ email: email })
-    } catch {
+    } catch(err) {
         throw new Error(err)
     }
 }
@@ -33,7 +33,7 @@ async function getByEmail(email) {
 async function findByToken(token) {
     try {
         return await User.find({ resetToken: token })
-    } catch {
+    } catch(err) {
         throw new Error(err)
     }
 }
