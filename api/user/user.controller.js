@@ -187,18 +187,20 @@ async function adminLogin(req, res) {
     }
 
     let users = await userService.getByEmail(req.body.email)
-    
+
     if (!users.length || users[0].password !== req.body.password) {
         return res.status(404).json(validation([{ msg: "Invalid credentials!" }]))
     }
-    
-    
+
     let token = createToken({ id: users[0]._id });
     users[0].password = undefined
-    return res.status(200).json(success("OK", { user: users[0], token}, res.statusCode))
-    
+    return res.status(200).json(success("OK", { user: users[0], token }, res.statusCode))
+
 }
 async function getInfo(req, res) {
+    // swagger.security = [{
+    //     "Bearer": []
+    // }]
     try {
         let user = await userService.getById(req.user.id);
         user.password = undefined

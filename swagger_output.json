@@ -1,9 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "1.0.0",
-    "title": "REST API",
-    "description": ""
+    "title": "Food Court REST API",
+    "description": "This is the auto generated API documentation for Food Court REST API.",
+    "version": "1.0.0"
   },
   "host": "localhost:4001",
   "basePath": "/",
@@ -11,6 +11,14 @@
   "schemes": [
     "http"
   ],
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Enter your bearer token in the format **Bearer &lt;token>**"
+    }
+  },
   "consumes": [],
   "produces": [],
   "paths": {
@@ -34,11 +42,21 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
       }
     },
     "/user/signup": {
       "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "tags": [],
         "description": "",
         "parameters": [
@@ -247,6 +265,11 @@
     "/food/": {
       "post": {
         "tags": [],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "description": "",
         "parameters": [
           {
@@ -278,6 +301,11 @@
         }
       },
       "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "tags": [],
         "description": "",
         "parameters": [],
@@ -294,6 +322,11 @@
     "/food/search": {
       "get": {
         "tags": [],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "description": "",
         "parameters": [
           {
@@ -315,6 +348,11 @@
     "/food/{id}": {
       "get": {
         "tags": [],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "description": "",
         "parameters": [
           {
@@ -385,6 +423,11 @@
     },
     "/order/": {
       "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "tags": [],
         "description": "",
         "parameters": [],
@@ -401,6 +444,11 @@
         }
       },
       "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "tags": [],
         "description": "",
         "parameters": [],
@@ -416,6 +464,11 @@
     },
     "/order/{id}": {
       "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "tags": [],
         "description": "",
         "parameters": [
@@ -429,6 +482,11 @@
         "responses": {}
       },
       "put": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "tags": [],
         "description": "",
         "parameters": [
@@ -454,6 +512,11 @@
     },
     "/cart/": {
       "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "tags": [],
         "description": "",
         "parameters": [
@@ -483,6 +546,11 @@
         }
       },
       "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "tags": [],
         "description": "",
         "parameters": [],
@@ -501,6 +569,11 @@
     },
     "/cart/{id}": {
       "put": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "tags": [],
         "description": "",
         "parameters": [
